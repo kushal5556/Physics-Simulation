@@ -53,12 +53,12 @@ int main()
         float vy = a.body.current_position.y - a.body.previous_position.y;
 
         float speed = sqrt(vx*vx + vy*vy) / dt; // speed per second
-        float dragCoefficient = 0.005; //resistance from environment(smaller->less(faster))
+        float dragCoefficient = 0.005; //resistance from environment(smaller -> less)
         float dragMagnitude = dragCoefficient * speed * speed; // speed squared
 
         // Apply it in the opposite direction of velocity
         if (speed > 0) {
-            // vx/dt to turn the raw position deltat back into a per-second velocity
+            // vx/dt to turn the raw position delta back into a per-second velocity
             a.body.acceleration.x -= ((vx / dt) / speed) * dragMagnitude;
             a.body.acceleration.y -= ((vy / dt) / speed) * dragMagnitude;
         }
@@ -73,7 +73,7 @@ int main()
         float tempX = a.body.current_position.x;
         float tempY = a.body.current_position.y;
 
-        // calculate the next position using current, previous and acceleration
+        // calculate the next position using current, previous position and acceleration
         a.body.current_position.x = tempX + (tempX - a.body.previous_position.x) + a.body.acceleration.x * dt * dt;
         a.body.current_position.y = tempY + (tempY - a.body.previous_position.y) + a.body.acceleration.y * dt * dt;
 
@@ -85,21 +85,23 @@ int main()
         if( a.body.current_position.x + a.radius >= WIDTH){
             //find how fast it was moving inward
             float vx = a.body.current_position.x - a.body.previous_position.x;
+
+            //clamp the position
             a.body.current_position.x = WIDTH - a.radius;
-            //trick the history! move the prvious position forward
+
+            //Trick the history! move the prvious position forward
             // so next frame it thinks it was traveling backward
             a.body.previous_position.x = a.body.current_position.x + (vx * RESTITUTION);
         } 
         if( a.body.current_position.x - a.radius <= 0){
             float vx = a.body.current_position.x - a.body.previous_position.x; 
             a.body.current_position.x = a.radius;
-
             a.body.previous_position.x = a.body.current_position.x + (vx * RESTITUTION);
         }
         if( a.body.current_position.y + a.radius >= HEIGHT){ 
             float vy = a.body.current_position.y - a.body.previous_position.y;
             a.body.current_position.y = HEIGHT - a.radius;
-            // if it is in very slow speed, stop bouncing 
+            // if speed is very slow, stop bouncing 
             if(abs(vy/dt) < 0.5){
                 a.body.previous_position.y = a.body.current_position.y;// lock it to the floor
                 a.body.acceleration.y = 0; // cancel gravity while resting
