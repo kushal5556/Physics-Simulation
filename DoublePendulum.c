@@ -6,8 +6,8 @@
 
 //---------------- Global constants -------------
 #define GRAVITY 500
-#define THICKNESS 8 
 
+#define THICKNESS 8 
 #define MAX_TRAIL 50
 
 //----------- Structs --------------
@@ -52,6 +52,7 @@ int main()
         //--------------- update everything ---------
         float dt = GetFrameTime();
 
+        //update trail
         Vector2 end = {a.position.x + a.length * sin(a.angle),
                        a.position.y + a.length * cos(a.angle) 
                       };
@@ -79,7 +80,6 @@ int main()
 
         for(int i = 0; i < trail_count; i++) DrawCircleV(trail[i], THICKNESS-3, RED);
         draw_double_pendulum(&a, &b, dt);
-
 
         EndDrawing();
     }
