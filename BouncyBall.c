@@ -89,7 +89,7 @@ int main()
             //clamp the position
             a.body.current_position.x = WIDTH - a.radius;
 
-            //Trick the history! move the prvious position forward
+            //Trick the history! move the previous position forward
             // so next frame it thinks it was traveling backward
             a.body.previous_position.x = a.body.current_position.x + (vx * RESTITUTION);
         } 
@@ -98,7 +98,7 @@ int main()
             a.body.current_position.x = a.radius;
             a.body.previous_position.x = a.body.current_position.x + (vx * RESTITUTION);
         }
-        if( a.body.current_position.y + a.radius >= HEIGHT){ 
+        if( a.body.current_position.y + a.raedius >= HEIGHT){ 
             float vy = a.body.current_position.y - a.body.previous_position.y;
             a.body.current_position.y = HEIGHT - a.radius;
             // if speed is very slow, stop bouncing 
