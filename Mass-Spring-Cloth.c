@@ -8,8 +8,13 @@
 //---------------Global constants ----------
 #define STIFFNESS 1.0 // more stiff more hard ot stretch 
                       //(opposite of elasticity)
-#define GRAVITY 9.8
+#define STRUCT_STIFFNESS 0.6f  // Keeps the grid structure intact
+#define SHEAR_STIFFNESS  0.4f  // Allows some rubbery twisting
+#define BEND_STIFFNESS   0.1f  // Allows it to fold naturally
+
+#define GRAVITY 500.0f;
 #define DAMPING 0.99 
+#define SPRING_SOLVER_ITERATION 1 // 1 -> more elastic 
 
 #define GRID_WIDTH 25
 #define GRID_HEIGHT 25
@@ -60,7 +65,7 @@ int main()
     Particle particles[TOTAL_PARTICLES];
     Spring springs[TOTAL_SPRINGS];
     
-    generate_particles(particles,GRID_WIDTH, GRID_HEIGHT,(Vector2){50,50}, 15, 10);
+    generate_particles(particles,GRID_WIDTH, GRID_HEIGHT,(Vector2){80,10}, 20, 10);
     generate_spring_grid(springs, particles, GRID_WIDTH, GRID_HEIGHT);
 
 
@@ -69,35 +74,41 @@ int main()
         //----------update everything ------------
         float dt = GetFrameTime();
         
+        static int grabbedIdx = -1; 
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
             Vector2 mousePos = GetMousePosition();
-            int closestIdx = -1;
-            float closestDist = 25.0f;
+            float closestDist = 50.0f;
 
             for(int i = 0; i < TOTAL_PARTICLES; i++){
-                float dx = particles[i].position.x - mousePos.x;
-                float dy = particles[i].position.y - mousePos.y;
-                float dist = sqrtf(dx*dx + dy*dy);
+                if(!particles[i].is_pinned){
+                    float dx = particles[i].position.x - mousePos.x;
+                    float dy = particles[i].position.y - mousePos.y;
+                    float dist = sqrtf(dx*dx + dy*dy);
 
-                if(dist < closestDist){
-                    closestDist = dist;
-                    closestIdx = i;
+                    if(dist < closestDist){
+                        closestDist = dist;
+                        grabbedIdx = i;
+                    }
                 }
             }
-            if(closestIdx != -1){
-                particles[closestIdx].position = mousePos;
-                particles[closestIdx].previous_position = mousePos;
-            }
+        }
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && grabbedIdx != -1) {
+            Vector2 mousePos = GetMousePosition();
+            particles[grabbedIdx].position = mousePos;
+            particles[grabbedIdx].previous_position = mousePos;
+        }
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            int grabbedIdx = -1; // Let go
         }
 
         for(int y = 0; y < GRID_HEIGHT; y++){
             for(int x = 0; x < GRID_WIDTH; x++){
                 int idx = x + (y*GRID_WIDTH);
-                update_particle(&particles[idx], dt);
+                update_particle(&particles[idx], 1.0f/60.0f);
             }
         }
 
-        for(int j = 0; j < 5; j++)
+        for(int j = 0; j < SPRING_SOLVER_ITERATION; j++)
             for(int i = 0; i < TOTAL_SPRINGS; i++){
                 calculate_spring(&particles[springs[i].particle_A], &particles[springs[i].particle_B], 
                 springs[i].rest_length, springs[i].stiffness);
@@ -139,10 +150,10 @@ int main()
 // -------- function definition -----------
 void update_particle(Particle *obj, float dt)
 {
-    if(obj->is_pinned) return;// Do not move pinned anchor particles
+   if(obj->is_pinned) return;// Do not move pinned anchor particles
 
    obj->acceleration.x = 0;
-   obj->acceleration.y = obj->mass/GRAVITY;
+   obj->acceleration.y = GRAVITY;
 
    // a = f/m
    float tx = obj->position.x;
@@ -223,6 +234,7 @@ void generate_spring_grid(Spring springs[], Particle particles[], int width, int
     int count = 0;
     for(int y = 0; y < height; y++){
         for(int x = 0; x < width; x++){
+            if(count >= TOTAL_SPRINGS) return;
             int currentIndex = x + (y*width);
             // ------- Structural Springs ---------
             // Right neighbor
@@ -237,7 +249,7 @@ void generate_spring_grid(Spring springs[], Particle particles[], int width, int
                         .particle_A  = currentIndex, 
                         .particle_B  = neighborIndex,
                         .rest_length = rest_length,
-                        .stiffness   = 0.5
+                        .stiffness   = STRUCT_STIFFNESS
                 };
             }
             // Down neighbor
@@ -252,7 +264,7 @@ void generate_spring_grid(Spring springs[], Particle particles[], int width, int
                         .particle_A  = currentIndex, 
                         .particle_B  = neighborIndex,
                         .rest_length = rest_length,
-                        .stiffness   = 0.5
+                        .stiffness   = STRUCT_STIFFNESS
                 };
             }
             // -------- Shear Springs ------------
@@ -268,7 +280,7 @@ void generate_spring_grid(Spring springs[], Particle particles[], int width, int
                         .particle_A  = currentIndex, 
                         .particle_B  = neighborIndex,
                         .rest_length = rest_length,
-                        .stiffness   = 0.5
+                        .stiffness = SHEAR_STIFFNESS
                 };
             }
             // Down-Left
@@ -283,7 +295,7 @@ void generate_spring_grid(Spring springs[], Particle particles[], int width, int
                         .particle_A  = currentIndex, 
                         .particle_B  = neighborIndex,
                         .rest_length = rest_length,
-                        .stiffness   = 0.5
+                        .stiffness = SHEAR_STIFFNESS
                 };
             }
             // -------- Bend Springs -----------
@@ -299,7 +311,7 @@ void generate_spring_grid(Spring springs[], Particle particles[], int width, int
                         .particle_A  = currentIndex, 
                         .particle_B  = neighborIndex,
                         .rest_length = rest_length,
-                        .stiffness   = 0.5
+                        .stiffness = BEND_STIFFNESS
                 };
             }
             // Two units Down
@@ -314,7 +326,7 @@ void generate_spring_grid(Spring springs[], Particle particles[], int width, int
                         .particle_A  = currentIndex, 
                         .particle_B  = neighborIndex,
                         .rest_length = rest_length,
-                        .stiffness   = 0.5
+                        .stiffness = BEND_STIFFNESS
                 };
             }
         }
