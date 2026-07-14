@@ -77,7 +77,7 @@ int main()
         static int grabbedIdx = -1; 
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
             Vector2 mousePos = GetMousePosition();
-            float closestDist = 50.0f;
+            float closestDist = 5.0f;
 
             for(int i = 0; i < TOTAL_PARTICLES; i++){
                 if(!particles[i].is_pinned){
