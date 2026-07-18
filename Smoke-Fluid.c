@@ -21,11 +21,11 @@ typedef struct {
 // --- function declarations ----
 void init_grid(Cell grid[]);
 void update_physics(Cell grid[], float dt);
-void emit_fluid(Cell grid[], float pixel_x, float pixel_y, float radius, float amount, Vector2 push_vel);
+void emit_fluid(Cell grid[], float pixel_x, float pixel_y, float radius, float density, Vector2 push_vel);
 
 int main()
 {
-    InitWindow(WIDTH, HEIGHT, "Advanced Smoke & Fluid Simulation");
+    InitWindow(WIDTH, HEIGHT, "Smoke & Fluid Simulation");
     SetTargetFPS(60);
 
     Cell grid[GRID_WIDTH * GRID_HEIGHT];
@@ -38,6 +38,7 @@ int main()
 
         // 1. CUSTOM POSITION EMITTER (Center-Bottom Chimney Plume)
         emit_fluid(grid, 400.0f, 550.0f, 2.5f, 255.0f, (Vector2){0.0f, -180.0f});
+        emit_fluid(grid, 100.0f, 550.0f, 2.5f, 255.0f, (Vector2){0.0f, -180.0f});
 
         // 2. INTERACTION (Left Click = Add Smoke | Right Click = Place Walls)
         Vector2 mousePos = GetMousePosition();
@@ -115,11 +116,12 @@ void init_grid(Cell grid[])
     for(int y = 0; y < GRID_HEIGHT; y++) {
         for(int x = 0; x < GRID_WIDTH; x++) {
             int idx = x + (y * GRID_WIDTH);
+
             grid[idx].velocity = (Vector2){0.0f, 0.0f};
             grid[idx].density = 0.0f;
             grid[idx].is_obstacle = false;
 
-            // Places a default target block right in the center field path
+            // Places a default target block (obstacle) right in the center field path
             float cx = GRID_WIDTH / 2.0f;
             float cy = GRID_HEIGHT / 2.5f;
             float r = 4.5f; 
@@ -130,7 +132,7 @@ void init_grid(Cell grid[])
     }
 }
 
-void emit_fluid(Cell grid[], float pixel_x, float pixel_y, float radius, float amount, Vector2 push_vel)
+void emit_fluid(Cell grid[], float pixel_x, float pixel_y, float radius, float density, Vector2 push_vel)
 {
     int target_x = (int)(pixel_x / ((float)WIDTH / GRID_WIDTH));
     int target_y = (int)(pixel_y / ((float)HEIGHT / GRID_HEIGHT));
@@ -144,7 +146,7 @@ void emit_fluid(Cell grid[], float pixel_x, float pixel_y, float radius, float a
                 if (x*x + y*y <= radius*radius) { 
                     int idx = gx + (gy * GRID_WIDTH);
                     if (!grid[idx].is_obstacle) {
-                        grid[idx].density = amount;
+                        grid[idx].density = density;
                         grid[idx].velocity.x += push_vel.x * 0.4f;
                         grid[idx].velocity.y += push_vel.y * 0.4f;
                     }
@@ -265,7 +267,6 @@ void update_physics(Cell grid[], float dt)
         }
     }
 }
-
 
 
 
