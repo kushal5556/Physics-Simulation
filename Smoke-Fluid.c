@@ -36,11 +36,10 @@ int main()
         float dt = GetFrameTime();
         if (dt > 0.1f) dt = 0.1f; 
 
-        // 1. CUSTOM POSITION EMITTER (Center-Bottom Chimney Plume)
+        // POSITION EMITTER (Center-Bottom Chimney Plume)
         emit_fluid(grid, 400.0f, 550.0f, 2.5f, 255.0f, (Vector2){0.0f, -180.0f});
-        emit_fluid(grid, 100.0f, 550.0f, 2.5f, 255.0f, (Vector2){0.0f, -180.0f});
 
-        // 2. INTERACTION (Left Click = Add Smoke | Right Click = Place Walls)
+        //  INTERACTION (Left Click = Add Smoke | Right Click = Place Walls)
         Vector2 mousePos = GetMousePosition();
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             Vector2 drag = GetMouseDelta();
